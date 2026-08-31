@@ -59,7 +59,7 @@ public class Cards {
         int aceCount = 0;
 
         for (Card card : hand) {
-            value += card.getValue();
+            value += card.getRankValue();
 
             if (card.getRank().equals("A")) {
                 aceCount++;
@@ -74,4 +74,3 @@ public class Cards {
         return value;
     }
 }
-

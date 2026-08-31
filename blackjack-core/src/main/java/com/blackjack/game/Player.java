@@ -92,4 +92,3 @@ public class Player {
         MONEY -= WAGER + INSURANCE;
     }
 }
-

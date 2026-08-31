@@ -34,4 +34,3 @@ public class Kattio extends PrintWriter {
         return Long.parseLong(next());
     }
 }
-

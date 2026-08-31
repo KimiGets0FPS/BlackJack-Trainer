@@ -8,14 +8,7 @@ public class Hand {
     private final Deck deck = new Deck();
 
     public static void main(String[] args) {
-        Hand hand = new Hand();
-        Player user = new Player(1);
-        Kattio io = new Kattio(System.in, System.out);
-        for (int i = 0; i < 5; i++) {
-            hand.playHand(user, 2, io);
-            hand.resetDeck();
-        }
-        io.close();
+
     }
 
     public void playHand(Player user, int numPlayers, Kattio io) {  // Game logic for a single hand of blackjack
@@ -25,25 +18,26 @@ public class Hand {
         handleWager(players[1], io);
 
         System.out.println("Dealer's top card: " + dealer.getHand().get(0) +
-                " (Value: " + dealer.getHand().get(0).getValue() +
+                " (Value: " + dealer.getHand().get(0).getRankValue() +
                 ")\nYour cards: " + players[1].getHand()+ " (Value: " +
                 Cards.getHandValue(players[1].getHand()) + ")"
         );
 
         // Insurance
         boolean insurance = false;
-        if (Cards.getHandValue(players[1].getHand()) != 21 && dealer.getHand().get(0).getValue() == 11) {  // Offers insurance if user doesn't have blackjack
-            insurance = handleInsurance(players[1], dealer, io);
+        if (Cards.getHandValue(players[1].getHand()) != 21 && dealer.getHand().get(0).getRankValue() == 11) {  // Offers insurance if user doesn't have blackjack
+            insurance = handleInsurance(players[1], io);
         }
         if (Cards.getHandValue(dealer.getHand()) != 21) {  // Dealer doesn't have blackjack
-            if (dealer.getHand().get(0).getValue() == 11) {
+            // TODO : what if dealer has a face card as an up card, but has blackjack
+            if (dealer.getHand().get(0).getRankValue() == 11) {
                 System.out.println("Dealer does not have blackjack");
             }
             // Split
-            handleSplit(players[1], io);
-
-            // User takes their turn
-            playUserTurn(players[1], io);
+            if (!handleSplit(players[1], io)) {
+                // User takes their normal turn when they don't split
+                playUserTurn(players[1], io);
+            }
 
             // Other players take their turns
 
@@ -107,7 +101,7 @@ public class Hand {
         return players;
     }
 
-    public boolean handleInsurance(Player player, Dealer dealer, Kattio io) {
+    public boolean handleInsurance(Player player, Kattio io) {
         System.out.print("Do you want insurance (y/n): ");
         if (!io.next().equalsIgnoreCase("y")) {
             return false;
@@ -119,22 +113,45 @@ public class Hand {
         return true;
     }
 
-    public void handleSplit(Player player, Kattio io) {  // Recursion?
+    public boolean handleSplit(Player player, Kattio io) {  // Recursion?
         if (!canSplit(player)) {
-            return;
+            return false;
         }
         System.out.println("Do you want to split (y/n): ");
         if (!io.next().equalsIgnoreCase("y")) {
-            return;
+            return false;
         }
         // Create two new hands for the player
-        Player splitHand1 = new Player(player.getID() + 1000);
-        Player splitHand2 = new Player(player.getID() + 2000);
+
+        // TODO: Still needs fixing
+
+        Player splitHand1 = new Player(player.getID());
+        Player splitHand2 = new Player(player.getID());
+
+
+        splitHand1.addCard(player.getHand().get(0));
+        splitHand1.addCard(player.getHand().get(1));
+
+
+        splitHand1.hit(deck);
+        System.out.println("First split hand: " + splitHand1.getHand() + " (Value: " +
+                Cards.getHandValue(splitHand1.getHand()) + ")");
+        handleSplit(splitHand1, io);
+        playUserTurn(splitHand1, io);
+
+
+        splitHand2.hit(deck);
+        System.out.println("Second split hand: " + splitHand2.getHand() + " (Value: " +
+                Cards.getHandValue(splitHand2.getHand()) + ")");
+        handleSplit(splitHand2, io);
+        playUserTurn(splitHand2, io);
+
+        return true;
     }
 
     private boolean canSplit(Player player) {
         return player.getHand().size() == 2 &&
-                player.getHand().get(0).getRank().equals(player.getHand().get(1).getRank());
+                player.getHand().get(0).getRankValue() == player.getHand().get(1).getRankValue();
     }
 
     public void playUserTurn(Player player, Kattio io) {

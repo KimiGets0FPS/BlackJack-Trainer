@@ -1,7 +1,6 @@
 package com.blackjack.game;
 
 public class Dealer extends Player {
-
     public Dealer() {
         super(0);
     }
